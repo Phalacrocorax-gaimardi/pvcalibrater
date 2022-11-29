@@ -18,7 +18,7 @@ knitr::opts_chunk$set(
 <!-- badges: start -->
 <!-- badges: end -->
 
-The goal of pvcalibrater is to ...
+pvcalibrater calibrates an agent-based-model for solar photo-voltaic adoption by Irish households. 
 
 ## Installation
 
@@ -35,7 +35,15 @@ This is a basic example which shows you how to solve a common problem:
 
 ```{r example}
 library(pvcalibrater)
-## basic example code
+## survey questions
+head(pv_qanda)
+## survey data
+head(pv_data)
+## restrict surey data to owner-occupiers (perhaps with a mortgage, but excluding apartments) 
+pv_data_oo <- pv_data %>% dplyr::filter(q1 %in% 2:4,q3 %in% 1:2)
+##transform from likelihood to Likert scores to adoption utilities
+pv_util <- transform_to_utils(pv_data)
+
 ```
 
 What is special about using `README.Rmd` instead of just `README.md`? You can include R chunks like so:
