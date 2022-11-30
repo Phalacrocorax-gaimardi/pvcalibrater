@@ -12,7 +12,7 @@ plot_weights(shap_scores_long, clip = 0.05)
 \item{clip}{fraction of observations to clip (i.e. reset to clip/2, 1-clip/2 quantile values). thetas are unclipped.}
 }
 \value{
-
+a pairs plot
 }
 \description{
 plot_weights

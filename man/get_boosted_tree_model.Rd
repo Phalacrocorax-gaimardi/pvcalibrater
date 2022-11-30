@@ -29,6 +29,3 @@ xgboost model
 \description{
 creates a cross-validated boosted tree regression model from pv survey data
 }
-\examples{
-
-}

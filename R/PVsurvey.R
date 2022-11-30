@@ -88,6 +88,7 @@ find_optimum_rounds_from_crossvalidation <- function(pv_data, learning_rate=0.02
 #'
 get_boosted_tree_model <- function(pv_data_in, learning_rate=0.02, tree_depth=5, k_crossvalidation=5,complexity_factor = 1){
 
+  if("ID" %in% names(pv_data_in)) pv_data_in <- pv_data_in %>% dplyr::select(-ID)
   pv_util <- transform_to_utils(pv_data_in)
   pv.train <- xgboost::xgb.DMatrix(as.matrix(pv_util[,-dim(pv_util)[2]]),label=as.vector(pv_util$u), missing=NA)
 
@@ -130,6 +131,7 @@ get_boosted_tree_model <- function(pv_data_in, learning_rate=0.02, tree_depth=5,
 #' @examples
 get_shap_scores <- function(pv_data_in,bst){
 
+  if("ID" %in% names(pv_data_in)) pv_data_in <- pv_data_in %>% dplyr::select(-ID)
   pv_util <- transform_to_utils(pv_data_in)
   pv_util_long <- pv_util
   pv_util_long$ID <- 1:dim(pv_util)[1]
@@ -180,10 +182,10 @@ get_abm_calibration <- function(shap_scores_long){
 
   shap_scores_abm <- shap_scores_long %>% dplyr::filter(code %in% c("q9_1","qsp21")) %>% dplyr::select(-u_predicted,-u_actual)
   shap_scores_abm <- shap_scores_abm %>% dplyr::bind_rows(u_theta) %>% dplyr::arrange(ID)
-  shap_scores_abm <- shap_scores_abm %>% rename("du"=shap)
+  shap_scores_abm <- shap_scores_abm %>% dplyr::rename("du"=shap)
   shap_scores_mean <- shap_scores_abm %>% dplyr::group_by(code,answercode) %>% dplyr::summarise(du_mean=mean(du))
-  shap_scores_abm <- shap_scores_abm %>% inner_join(shap_scores_mean)
-  shap_scores_abm <- shap_scores_abm %>% mutate(weight=du/du_mean)
+  shap_scores_abm <- shap_scores_abm %>% dplyr::inner_join(shap_scores_mean)
+  shap_scores_abm <- shap_scores_abm %>% dplyr::mutate(weight=du/du_mean)
   return(shap_scores_abm)
 }
 
@@ -225,7 +227,7 @@ get_model_weights <- function(shap_scores_long){
 get_empirical_partial_utilities <- function(shap_scores_long){
 
   shap_scores_abm <- get_abm_calibration(shap_scores_long)
-  partial_utils <- shap_scores_abm %>% group_by(code,answercode) %>% summarise(du_mean=mean(du))
+  partial_utils <- shap_scores_abm %>% dplyr::group_by(code,answercode) %>% dplyr::summarise(du_mean=mean(du))
   return(partial_utils)
 }
 

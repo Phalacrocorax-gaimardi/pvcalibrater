@@ -16,48 +16,55 @@ knitr::opts_chunk$set(
 # pvcalibrater
 
 <!-- badges: start -->
+badge_codecov(ghaccount="Phalacrocorax-gaimardi",ghrepo="pvcalibrater",branch="master")
 <!-- badges: end -->
 
-pvcalibrater calibrates an agent-based-model for solar photo-voltaic adoption by Irish households. 
+pvcalibrater calibrates agent-based-model for solar photo-voltaic adoption by Irish households. 
+
+Each agent has a utility function for pv adoption consisting of individually weighted financial, social and barrier partial (dis-)utility terms.
 
 ## Installation
 
-You can install the development version of pvcalibrater from [GitHub](https://github.com/) with:
+You can install pvcalibrater from [GitHub](https://github.com/) with:
 
 ``` r
 # install.packages("devtools")
 devtools::install_github("Phalacrocorax-gaimardi/pvcalibrater")
 ```
 
-## Example
+## Data
 
-This is a basic example which shows you how to solve a common problem:
+Survey data consists 28 features for 1208 agents. 
 
-```{r example}
+```{r data, echo = F}
 library(pvcalibrater)
-## survey questions
-head(pv_qanda)
-## survey data
-head(pv_data)
-## restrict surey data to owner-occupiers (perhaps with a mortgage, but excluding apartments) 
+library(knitr) %>% suppressWarnings()
+## survey answers
+kable(pv_qanda[30:37,],row.names=F, caption ="A survey of pv_qanda describing the survey questions and choice of answers")
+## the data
+kable(pv_data[10:14,],row.names=F,caption = "A sample of pv_data which contains the survey responses")
+##restrict to owner-occupiers excluding apartments
 pv_data_oo <- pv_data %>% dplyr::filter(q1 %in% 2:4,q3 %in% 1:2)
-##transform from likelihood to Likert scores to adoption utilities
-pv_util <- transform_to_utils(pv_data)
-
 ```
 
-What is special about using `README.Rmd` instead of just `README.md`? You can include R chunks like so:
+## Model
 
-```{r cars}
-summary(cars)
+A boosted tree regression model predicts the utility for pv adoption from the discrete values taken by 27 agent features.
+
+```{r eval=F}
+##xgboost
+bst <- get_boosted_tree_model(pv_data_oo,complexity_factor = 1.5)
+##partial utility contribution for each feature and agent
+shap_scores_long_sample <- get_shap_scores(pv_data_oo,bst)
+##average utilities for features used in ABM (financial q9_1, social qsp21 and barrier)
+get_empirical_partial_utilities(shap_scores_long)
+##individual weights for financial, social and barrier terms
+abm_weights <- get_model_weights(shap_scores_long)
 ```
 
-You'll still need to render `README.Rmd` regularly, to keep `README.md` up-to-date. `devtools::build_readme()` is handy for this. You could also use GitHub Actions to re-render `README.Rmd` every time you push. An example workflow can be found here: <https://github.com/r-lib/actions/tree/v1/examples>.
 
-You can also embed plots, for example:
+## Plot
 
-```{r pressure, echo = FALSE}
-plot(pressure)
+```{r plots, echo = FALSE}
+plot_weights(shap_scores_long_sample)
 ```
-
-In that case, don't forget to commit and push the resulting figure files, so they display on GitHub and CRAN.

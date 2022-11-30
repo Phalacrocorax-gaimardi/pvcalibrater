@@ -31,7 +31,6 @@ featureImportance <- function(shap_scores_long, feature_code){
 #' @return n x m contingency table
 #' @export
 #'
-#' @examples
 createTable2 <- function(q,format="long"){
   #contingency table for n variables
   non_multiple_choice_question_codes <- NULL
@@ -59,15 +58,14 @@ createTable2 <- function(q,format="long"){
 #' @param shap_scores_long partial utilities
 #' @param clip fraction of observations to clip (i.e. reset to clip/2, 1-clip/2 quantile values). thetas are unclipped.
 #'
-#' @return
+#' @return a pairs plot
 #' @export
 #' @importFrom psych pairs.panels
 #'
-#' @examples
 plot_weights <- function(shap_scores_long, clip=0.05){
 
-  weights_abm_wide <- get_model_weights(shap_score_long)
-  weights_abm_wide <- weights_abm_wide %>% select(-ID)
+  weights_abm_wide <- get_model_weights(shap_scores_long)
+  weights_abm_wide <- weights_abm_wide %>% dplyr::select(-ID)
   clipper <- function(x){
     q <- quantile(x,probs=c(clip/2,1-clip/2))
     x <- ifelse(x > q[2],q[2],x)
