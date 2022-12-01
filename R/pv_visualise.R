@@ -2,7 +2,7 @@
 
 #features q9_1
 
-#' featureImportance
+#' plot_feature_utility
 #'
 #' makes a boxplot of shap score dependences on feature values
 #'
@@ -13,10 +13,14 @@
 #' @export
 #'
 #' @examples
-featureImportance <- function(shap_scores_long, feature_code){
+plot_feature_utility <- function(shap_scores_long, feature_code){
 
-  shap <- shap_scores_long %>% dplyr::filter(code==feature_code) %>% dplyr::select(ID,all_of(feature_code),shap)
-  shap %>% ggplot2::ggplot(ggplot2::aes(factor(.data[[feature_code]]), .data[["shap"]])) + ggplot2::geom_boxplot()
+  shap <- shap_scores_long %>% dplyr::filter(code==feature_code)
+  shap$answer <- factor(shap$answer, levels=dplyr::filter(pv_qanda,code==feature_code)$answer)
+  g <- shap %>% ggplot2::ggplot(ggplot2::aes(answer, shap)) + ggplot2::geom_boxplot()
+  g + ggplot2::labs(title=stringr::str_wrap(shap$question %>% unique(),60),x="",y="du") + ggplot2::theme_minimal() + ggplot2::theme(axis.text.x = ggplot2::element_text(angle=90))
+
+  #ggsave(g,width=30,height=30,device="png")
   #if(feature_code == "q9_1") shap %>% ggplot2::ggplot(ggplot2::aes(factor(bill_vals[.data[[feature_code]]]), .data[["shap"]])) + ggplot2::geom_boxplot()
 }
 

@@ -5,9 +5,8 @@
 \alias{pv_data}
 \title{Solar PV survey data}
 \format{
-A data frame with 1208 rows and 29 variables:
+A data frame with 1208 rows and 27 variables:
 \describe{
-\item{ID}{ID label 1:1208 (not Household ID HHID)}
 \item{age}{ 1: 18-24 .... 5: 55+}
 \item{gender}{male =1 female =2}
 \item{class}{social class}

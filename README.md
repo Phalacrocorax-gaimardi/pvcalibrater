@@ -5,15 +5,12 @@
 
 <!-- badges: start -->
 
-badge_codecov(ghaccount=“Phalacrocorax-gaimardi”,ghrepo=“pvcalibrater”,branch=“master”)
+[![packageversion](https://img.shields.io/badge/Package%20version-0.0.0.9000-orange.svg?style=flat-square)](commits/master)
+[![Last-changedate](https://img.shields.io/badge/last%20change-2022--12--01-yellowgreen.svg)](/commits/master)
 <!-- badges: end -->
 
 pvcalibrater calibrates agent-based-model for solar photo-voltaic
 adoption by Irish households.
-
-Each agent has a utility function for pv adoption consisting of
-individually weighted financial, social and barrier partial
-(dis-)utility terms.
 
 ## Installation
 
@@ -26,7 +23,10 @@ devtools::install_github("Phalacrocorax-gaimardi/pvcalibrater")
 
 ## Data
 
-Survey data consists 28 features for 1208 agents.
+The PV survey dataset **pv_data** has 27 discrete features of 1208
+agents. The survey questions and the corresponding answer choices are
+described in **pv_qanda**. Samples from **pv_qanda** and **pv_data** are
+given below.
 
 | code | question                                                           | answercode | answer                                                         |
 |:-----|:-------------------------------------------------------------------|-----------:|:---------------------------------------------------------------|
@@ -39,37 +39,90 @@ Survey data consists 28 features for 1208 agents.
 | q3   | Which of the following best describes your living situation?       |          3 | I live in a property that myself or family are renting         |
 | q3   | Which of the following best describes your living situation?       |         98 | Other (Please specify)                                         |
 
-A survey of pv_qanda describing the survey questions and choice of
-answers
+| age | gender | class | region | qc1 |  q1 |  q3 |  q5 |  q7 | q9_1 | q10b | q15 | q16 | q17b | q17c | q17a_1 | q17a_2 | q17a_3 | q17a_5 | qsp20 | qsp21 |  qj |  qk |  qh |  qg |  qf | qsp22_7 |
+|----:|-------:|------:|-------:|----:|----:|----:|----:|----:|-----:|-----:|----:|----:|-----:|-----:|-------:|-------:|-------:|-------:|------:|------:|----:|----:|----:|----:|----:|--------:|
+|   3 |      2 |     2 |      4 |   2 |   3 |   3 |   4 |   2 |   NA |    4 |   6 |   1 |    3 |    3 |      3 |      3 |      3 |      3 |     3 |     1 |   2 |   4 |  10 |   1 |   3 |       3 |
+|   5 |      2 |     1 |      4 |   1 |   4 |   1 |   3 |   2 |    2 |    3 |   3 |   6 |    4 |    3 |      1 |      4 |      4 |      4 |     5 |     2 |   2 |   4 |   3 |   1 |   5 |       1 |
+|   1 |      2 |     1 |      1 |   2 |   3 |   1 |   2 |   1 |   NA |    1 |   2 |   4 |    4 |    2 |      1 |      1 |      1 |      1 |     3 |     1 |   4 |   1 |   1 |   2 |   3 |       2 |
+|   4 |      2 |     2 |      3 |   1 |   3 |   2 |   4 |   1 |    3 |    2 |   3 |   6 |    3 |    3 |      4 |      4 |      4 |      4 |     3 |     2 |   2 |   5 |   5 |   1 |   1 |       4 |
+|   5 |      2 |     2 |      1 |   2 |   3 |   1 |   3 |   2 |    3 |    2 |   2 |   6 |    2 |    4 |      2 |      4 |      4 |      5 |     3 |     1 |   2 |   3 |   4 |   1 |   1 |       4 |
 
-|  ID | age | gender | class | region | qc1 |  q1 |  q3 |  q5 |  q7 | q9_1 | q10b | q15 | q16 | q17b | q17c | q17a_1 | q17a_2 | q17a_3 | q17a_5 | qsp20 | qsp21 |  qj |  qk |  qh |  qg |  qf | qsp22_7 |
-|----:|----:|-------:|------:|-------:|----:|----:|----:|----:|----:|-----:|-----:|----:|----:|-----:|-----:|-------:|-------:|-------:|-------:|------:|------:|----:|----:|----:|----:|----:|--------:|
-|  10 |   3 |      2 |     2 |      4 |   2 |   3 |   3 |   4 |   2 |   NA |    4 |   6 |   1 |    3 |    3 |      3 |      3 |      3 |      3 |     3 |     1 |   2 |   4 |  10 |   1 |   3 |       3 |
-|  11 |   5 |      2 |     1 |      4 |   1 |   4 |   1 |   3 |   2 |    3 |    3 |   3 |   6 |    4 |    3 |      1 |      4 |      4 |      4 |     5 |     2 |   2 |   4 |   3 |   1 |   5 |       1 |
-|  12 |   1 |      2 |     1 |      1 |   2 |   3 |   1 |   2 |   1 |   NA |    1 |   2 |   4 |    4 |    2 |      1 |      1 |      1 |      1 |     3 |     1 |   4 |   1 |   1 |   2 |   3 |       2 |
-|  13 |   4 |      2 |     2 |      3 |   1 |   3 |   2 |   4 |   1 |    5 |    2 |   3 |   6 |    3 |    3 |      4 |      4 |      4 |      4 |     3 |     2 |   2 |   5 |   5 |   1 |   1 |       4 |
-|  14 |   5 |      2 |     2 |      1 |   2 |   3 |   1 |   3 |   2 |    4 |    2 |   2 |   6 |    2 |    4 |      2 |      4 |      4 |      5 |     3 |     1 |   2 |   3 |   4 |   1 |   1 |       4 |
+Subsets of the full survey can be used to train alternative models. For
+example, *pv_data_oo* excludes non owner-occupiers and apartments
 
-A sample of pv_data which contains the survey responses
+``` r
+pv_data_oo <- pv_data %>% dplyr::filter(q1 %in% 2:4,q3 %in% 1:2)
+```
 
 ## Model
 
-A boosted tree regression model predicts the utility for pv adoption
-from the discrete values taken by 27 agent features.
+**pv_calibrater** converts stated adoption likelihood (Likert scores
+**qsp22_7**) to adoption utilities and an additive boosted tree
+regression model is trained on the utilities. The model predicts
+adoption utility as a function of the discrete values taken by 26 agent
+features.
 
 ``` r
 ##xgboost
 bst <- get_boosted_tree_model(pv_data_oo,complexity_factor = 1.5)
 ##partial utility contribution for each feature and agent
 shap_scores_long_sample <- get_shap_scores(pv_data_oo,bst)
-##average utilities for features used in ABM (financial q9_1, social qsp21 and barrier)
-get_empirical_partial_utilities(shap_scores_long)
-##individual weights for financial, social and barrier terms
-abm_weights <- get_model_weights(shap_scores_long)
 ```
 
-## Plot
+``` r
+##mean partial utility functions for features used in ABM (financial q9_1, social qsp21 and barrier)
+get_empirical_partial_utilities(shap_scores_long_sample)
+#> Joining, by = c("code", "answercode")
+#> # A tibble: 8 x 3
+#> # Groups:   code [3]
+#>   code  answercode   du_mean
+#>   <chr>      <dbl>     <dbl>
+#> 1 q9_1           1  0.000316
+#> 2 q9_1           2 -0.00101 
+#> 3 q9_1           3  0.00781 
+#> 4 q9_1          NA -0.00383 
+#> 5 qsp21          1 -0.00139 
+#> 6 qsp21          2  0.00137 
+#> 7 qsp21          3  0.00284 
+#> 8 theta         NA -0.0405
+```
 
-    #> Joining, by = c("code", "answercode")
+``` r
+##individual weights for financial, social and barrier terms
+get_model_weights(shap_scores_long_sample)
+#> Joining, by = c("code", "answercode")
+#> # A tibble: 755 x 4
+#>       ID    q9_1    qsp21 theta
+#>    <int>   <dbl>    <dbl> <dbl>
+#>  1     1   3.32   0.576   2.83 
+#>  2     2   0.829 -0.00886 2.04 
+#>  3     3  -0.114  1.50    2.88 
+#>  4     4   0.301  3.22    5.12 
+#>  5     5 -27.6    4.33    5.06 
+#>  6     6   0.199 -1.46    4.76 
+#>  7     7   0.825  3.74    2.67 
+#>  8     8   1.57   0.309   0.654
+#>  9     9   1.44  -0.532   0.663
+#> 10    10 -13.9    1.83    1.54 
+#> # ... with 745 more rows
+```
 
-<img src="man/figures/README-plots-1.png" width="100%" />
+## Plots
+
+The social influence contribution to adoption utility
+
+``` r
+plot_feature_utility(shap_scores_long_sample, "qsp21")
+```
+
+<img src="man/figures/README-plot1-1.png" width="100%" />
+
+A pairs plot showing the distribution of weights is created by
+plot_weights
+
+``` r
+plot_weights(shap_scores_long_sample)
+#> Joining, by = c("code", "answercode")
+```
+
+<img src="man/figures/README-plot2-1.png" width="100%" />

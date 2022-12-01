@@ -16,12 +16,15 @@ knitr::opts_chunk$set(
 # pvcalibrater
 
 <!-- badges: start -->
-badge_codecov(ghaccount="Phalacrocorax-gaimardi",ghrepo="pvcalibrater",branch="master")
+```{r, echo = FALSE}                                                                                                       
+version <- as.vector(read.dcf('DESCRIPTION')[, 'Version'])                                                                 
+version <- gsub('-', '.', version)                                                                                          
+```                                                                                                                         
+[![packageversion](https://img.shields.io/badge/Package%20version-`r version`-orange.svg?style=flat-square)](commits/master)
+[![Last-changedate](https://img.shields.io/badge/last%20change-`r gsub('-', '--', Sys.Date())`-yellowgreen.svg)](/commits/master)
 <!-- badges: end -->
 
 pvcalibrater calibrates agent-based-model for solar photo-voltaic adoption by Irish households. 
-
-Each agent has a utility function for pv adoption consisting of individually weighted financial, social and barrier partial (dis-)utility terms.
 
 ## Installation
 
@@ -34,37 +37,57 @@ devtools::install_github("Phalacrocorax-gaimardi/pvcalibrater")
 
 ## Data
 
-Survey data consists 28 features for 1208 agents. 
+The PV survey dataset __pv_data__ has 27 discrete features of 1208 agents. The survey questions and the corresponding answer choices are described in __pv_qanda__. Samples from __pv_qanda__ and __pv_data__ are given below.
 
 ```{r data, echo = F}
 library(pvcalibrater)
 library(knitr) %>% suppressWarnings()
 ## survey answers
-kable(pv_qanda[30:37,],row.names=F, caption ="A survey of pv_qanda describing the survey questions and choice of answers")
+kable(pv_qanda[30:37,],row.names=F)
 ## the data
-kable(pv_data[10:14,],row.names=F,caption = "A sample of pv_data which contains the survey responses")
+kable(pv_data[10:14,],row.names=F)
 ##restrict to owner-occupiers excluding apartments
+```
+
+Subsets of the full survey can be used to train alternative models. For example, _pv_data_oo_ excludes non owner-occupiers and apartments 
+
+```{r data2, echo = T}
 pv_data_oo <- pv_data %>% dplyr::filter(q1 %in% 2:4,q3 %in% 1:2)
 ```
 
 ## Model
 
-A boosted tree regression model predicts the utility for pv adoption from the discrete values taken by 27 agent features.
+__pv_calibrater__ converts stated adoption likelihood (Likert scores __qsp22_7__) to adoption utilities and an additive boosted tree regression model is trained on the utilities. The model predicts adoption utility as a function of the discrete values taken by 26 agent features.
 
 ```{r eval=F}
 ##xgboost
 bst <- get_boosted_tree_model(pv_data_oo,complexity_factor = 1.5)
 ##partial utility contribution for each feature and agent
 shap_scores_long_sample <- get_shap_scores(pv_data_oo,bst)
-##average utilities for features used in ABM (financial q9_1, social qsp21 and barrier)
-get_empirical_partial_utilities(shap_scores_long)
+```
+
+```{r eval=T}
+##mean partial utility functions for features used in ABM (financial q9_1, social qsp21 and barrier)
+get_empirical_partial_utilities(shap_scores_long_sample)
+```
+
+```{r eval=T}
 ##individual weights for financial, social and barrier terms
-abm_weights <- get_model_weights(shap_scores_long)
+get_model_weights(shap_scores_long_sample)
 ```
 
 
-## Plot
+## Plots
 
-```{r plots, echo = FALSE}
+The social influence contribution to adoption utility
+
+```{r plot1, echo = T}
+plot_feature_utility(shap_scores_long_sample, "qsp21")
+```
+
+A pairs plot showing the distribution of weights is created by plot_weights
+
+```{r plot2, echo = T}
 plot_weights(shap_scores_long_sample)
 ```
+

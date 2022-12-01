@@ -116,7 +116,7 @@ get_boosted_tree_model <- function(pv_data_in, learning_rate=0.02, tree_depth=5,
 #e.g restrict to owner-occupier houses i.e. q1 in 2,3,4 q3 in 1,2
 #pv_data_oo <- pv_data %>% dplyr::filter(q1 %in% 2:4,q3 %in% 1:2)
 
-#bst <- get_boosted_tree_model(pv_data_oo,complexity_factor = 1.5)
+#bst <- get_boosted_tree_model(pv_data,complexity_factor = 1.5)
 
 #' get_shap_scores
 #'
@@ -153,7 +153,7 @@ get_shap_scores <- function(pv_data_in,bst){
   return(shap_scores_long1)
   }
 
-#shap_scores_long <- get_shap_scores(pv_data_oo,bst)
+#shap_scores_long <- get_shap_scores(pv_data,bst)
 #shap_scores_long %>% ggplot(aes(factor(round(u_actual,2)),u_predicted)) + geom_boxplot()
 
 #u_econ <- shap_scores_long %>% filter(code == "q9_1") %>% group_by(ID) %>% summarise(u_econ=shap)
