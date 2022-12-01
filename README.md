@@ -56,18 +56,33 @@ pv_data_oo <- pv_data %>% dplyr::filter(q1 %in% 2:4,q3 %in% 1:2)
 
 ## Model
 
-**pv_calibrater** converts stated adoption likelihood (Likert scores
-**qsp22_7**) to adoption utilities and an additive boosted tree
-regression model is trained on the utilities. The model predicts
-adoption utility as a function of the discrete values taken by 26 agent
-features.
+Firstly, **pv_calibrater** converts stated adoption likelihood (Likert
+scores **qsp22_7**) to adoption utilities, using simple assumptions for
+utility uncertainty and hypothetical bias. Hypothetical bias is
+fined-tuned later in the ABM by matching the observed PV adoption.
+Secondly, **pv_calibrater** generates an additive boosted tree
+regression model trained on the utilities. The model predicts an agent’s
+expected adoption utility as a function of the discrete values taken by
+26 agent features.
 
 ``` r
 ##xgboost
 bst <- get_boosted_tree_model(pv_data_oo,complexity_factor = 1.5)
+```
+
+All features contribute to the model adoption utility of an agent. These
+contributions are identified as Shapley importance scores.
+
+``` r
 ##partial utility contribution for each feature and agent
 shap_scores_long_sample <- get_shap_scores(pv_data_oo,bst)
 ```
+
+An ABM abstracts out some features that vary over the simulation time.
+–pv_calibrater\_\_ assumes these are financial and social. Averaging
+over all agents gives the empirical financial and social partial utility
+functions. The remaiing features have an average value $\theta$ (barrier
+term)
 
 ``` r
 ##mean partial utility functions for features used in ABM (financial q9_1, social qsp21 and barrier)
@@ -86,6 +101,9 @@ get_empirical_partial_utilities(shap_scores_long_sample)
 #> 7 qsp21          3  0.00284 
 #> 8 theta         NA -0.0405
 ```
+
+An individual agents adoption utility is a sum of the mean partial
+utilities with weights:
 
 ``` r
 ##individual weights for financial, social and barrier terms
