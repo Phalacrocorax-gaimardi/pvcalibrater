@@ -4,12 +4,16 @@
 \alias{get_shap_scores}
 \title{get_shap_scores}
 \usage{
-get_shap_scores(pv_data_in, bst)
+get_shap_scores(pv_data_in, bst, s, epsilon)
 }
 \arguments{
 \item{pv_data_in}{input survey data (training). Use pv_data for full survey data or pv_data_oo for owner-occupiers}
 
 \item{bst}{boosted tree model from xgboost}
+
+\item{s}{survey utility uncertainty}
+
+\item{epsilon}{hypothetical bias (1=unbiased, default 0.7)}
 }
 \value{
 shap scores for all agents and features, in long format and including BIAS (same for all agents)

@@ -5,20 +5,26 @@
 \title{find_optimum_rounds_from_crossvalidation}
 \usage{
 find_optimum_rounds_from_crossvalidation(
-  pv_data,
+  pv_data_in,
   learning_rate = 0.02,
   tree_depth = 5,
-  k_crossvalidation = 5
+  k_crossvalidation = 5,
+  s = 0.15,
+  epsilon = 0.7
 )
 }
 \arguments{
-\item{pv_data}{solar PV data}
+\item{pv_data_in}{solar PV survey dataset e.g. pv_data_oo}
 
 \item{learning_rate}{eta parameter (default 0.02)}
 
 \item{tree_depth}{maximum tree depth (default 5)}
 
 \item{k_crossvalidation}{k-fold cross validation}
+
+\item{s}{utility uncertainty (standard deviation) default 0.15}
+
+\item{epsilon}{survey hypothetical bias (zero bias corresponds to 1) default 0.7}
 }
 \value{
 n_opt

@@ -4,10 +4,12 @@
 \alias{get_abm_calibration}
 \title{get_abm_calibration}
 \usage{
-get_abm_calibration(shap_scores_long)
+get_abm_calibration(shap_scores_long, stat = "median")
 }
 \arguments{
 \item{shap_scores_long}{individual shap scores by feature (output from get_shap_scores)}
+
+\item{stat}{statistic - median (default) or mean}
 }
 \value{
 data frame giving partial utilities for abstracted model features and residual (theta) terms and individual weights

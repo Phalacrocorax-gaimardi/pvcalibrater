@@ -2,14 +2,16 @@
 % Please edit documentation in R/PVsurvey.R
 \name{get_boosted_tree_model}
 \alias{get_boosted_tree_model}
-\title{getBoostedTreeModel}
+\title{ge_boosted_tree_model}
 \usage{
 get_boosted_tree_model(
   pv_data_in,
   learning_rate = 0.02,
   tree_depth = 5,
   k_crossvalidation = 5,
-  complexity_factor = 1
+  complexity_factor = 1,
+  s = 0.15,
+  epsilon = 0.7
 )
 }
 \arguments{
@@ -22,6 +24,10 @@ get_boosted_tree_model(
 \item{k_crossvalidation}{k-fold cross validatin typical value 5}
 
 \item{complexity_factor}{"over-fitting" enhancement relative to optimal model complexity from cross-validation. Values in range 1-1.5.}
+
+\item{s}{utility uncertainty (standard deviation) default 0.15}
+
+\item{epsilon}{survey hypothetical bias (zero bias corresponds to 1) default 0.7}
 }
 \value{
 xgboost model

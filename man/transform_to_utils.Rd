@@ -9,9 +9,9 @@ transform_to_utils(pv_data, s = 0.15, epsilon = 0.7)
 \arguments{
 \item{pv_data}{survey data including qsp22_7 (Likert scores for adopting pv)}
 
-\item{s}{utility uncertainty (default 0.15)}
+\item{s}{utility uncertainty (standard deviation) default 0.15}
 
-\item{epsilon}{degree of hypothetical bias (default 0.7, 1 = no bias). Further hypothetical bias correction is applied at ABM tuning stage.}
+\item{epsilon}{survey hypothetical bias (zero bias corresponds to 1) default 0.7}
 }
 \value{
 modified pv survey dataframe

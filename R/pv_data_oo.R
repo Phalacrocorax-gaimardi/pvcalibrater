@@ -1,8 +1,8 @@
 #' Solar PV survey data
 #'
-#' From 2018 survey, all data
+#' From 2018 survey, reduced to non-apartment owner-occupiers
 #'
-#' @format A data frame with 1208 rows and 27 variables:
+#' @format A data frame with 759 rows and 27 variables:
 #' \describe{
 #'   \item{age}{ 1: 18-24 .... 5: 55+}
 #'   \item{gender}{male =1 female =2}
@@ -33,4 +33,4 @@
 #'   \item{qsp22_7}{Stated likelihood to consider installing solar PV}
 #' }
 #' @source \url{}
-"pv_data"
+"pv_data_oo"

@@ -71,14 +71,14 @@ All features contribute to the model adoption utility of an agent. These contrib
 shap_scores_long_sample <- get_shap_scores(pv_data_oo,bst)
 ```
 
-An ABM abstracts out some features that vary over the simulation time. --pv_calibrater__ assumes these are financial and social. Averaging over all agents gives the empirical financial and social partial utility functions. The remaiing features have an average value $\theta$ (barrier term)
+An ABM abstracts out some features that vary over the simulation time. --pv_calibrater__ assumes these are financial and social. Averaging over all agents gives the empirical financial and social partial utility functions. The remaining features have an average value $\theta$ (barrier term):
 
 ```{r eval=T}
 ##mean partial utility functions for features used in ABM (financial q9_1, social qsp21 and barrier)
 get_empirical_partial_utilities(shap_scores_long_sample)
 ```
 
-An individual agents adoption utility is a sum of the mean partial utilities with weights:
+An individual agents adoption utility is a sum of the mean partial utilities with (unclipped) weights:
 
 ```{r eval=T}
 ##individual weights for financial, social and barrier terms

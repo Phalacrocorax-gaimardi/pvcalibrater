@@ -4,10 +4,12 @@
 \alias{get_empirical_partial_utilities}
 \title{get_empirical_partial_utilities}
 \usage{
-get_empirical_partial_utilities(shap_scores_long)
+get_empirical_partial_utilities(shap_scores_long, stat = "median")
 }
 \arguments{
-\item{shap_scores_long}{shap scores (parial utilities)}
+\item{shap_scores_long}{shap scores (partial utilities)}
+
+\item{stat}{median (default) or mean}
 }
 \value{
 dataframe

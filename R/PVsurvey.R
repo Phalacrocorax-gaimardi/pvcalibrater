@@ -10,6 +10,8 @@
 #' @param pv_data survey data including qsp22_7 (Likert scores for adopting pv)
 #' @param s utility uncertainty (default 0.15)
 #' @param epsilon degree of hypothetical bias (default 0.7, 1 = no bias). Further hypothetical bias correction is applied at ABM tuning stage.
+#' @param s utility uncertainty (standard deviation) default 0.15
+#' @param epsilon survey hypothetical bias (zero bias corresponds to 1) default 0.7
 #'
 #' @return modified pv survey dataframe
 #' @export
@@ -29,19 +31,22 @@ transform_to_utils <-function(pv_data,s=0.15,epsilon=0.7){
 #'
 #' helper function to find optimum learning complexity for for given learning rate and tree depth
 #'
-#' @param pv_data solar PV data
+#' @param pv_data_in solar PV survey dataset e.g. pv_data_oo
 #' @param learning_rate eta parameter (default 0.02)
 #' @param tree_depth maximum tree depth (default 5)
 #' @param k_crossvalidation k-fold cross validation
+#' @param s utility uncertainty (standard deviation) default 0.15
+#' @param epsilon survey hypothetical bias (zero bias corresponds to 1) default 0.7
+
 #'
 #' @return n_opt
 #' @export
 #'
 #' @examples
-find_optimum_rounds_from_crossvalidation <- function(pv_data, learning_rate=0.02, tree_depth=5, k_crossvalidation=5){
+find_optimum_rounds_from_crossvalidation <- function(pv_data_in, learning_rate=0.02, tree_depth=5, k_crossvalidation=5,s=0.15,epsilon=0.7){
 
   #pv_data1 <- pv_data %>% dplyr::select(-ID)
-  pv_util <- transform_to_utils(pv_data)
+  pv_util <- transform_to_utils(pv_data_in,s,epsilon)
   pv.train <- xgboost::xgb.DMatrix(as.matrix(pv_util[,-dim(pv_util)[2]]),label=as.vector(pv_util$u), missing=NA)
 
   #if(!train_on_utilities) #train on Likert scores
@@ -70,7 +75,7 @@ find_optimum_rounds_from_crossvalidation <- function(pv_data, learning_rate=0.02
 }
 
 
-#' getBoostedTreeModel
+#' ge_boosted_tree_model
 #'
 #' creates a cross-validated boosted tree regression model from pv survey data
 #'
@@ -79,6 +84,8 @@ find_optimum_rounds_from_crossvalidation <- function(pv_data, learning_rate=0.02
 #' @param tree_depth tree depth typical value 5
 #' @param k_crossvalidation k-fold cross validatin typical value 5
 #' @param complexity_factor "over-fitting" enhancement relative to optimal model complexity from cross-validation. Values in range 1-1.5.
+#' @param s utility uncertainty (standard deviation) default 0.15
+#' @param epsilon survey hypothetical bias (zero bias corresponds to 1) default 0.7
 #'
 #'
 #' @return xgboost model
@@ -86,11 +93,11 @@ find_optimum_rounds_from_crossvalidation <- function(pv_data, learning_rate=0.02
 #'
 #' @examples
 #'
-get_boosted_tree_model <- function(pv_data_in, learning_rate=0.02, tree_depth=5, k_crossvalidation=5,complexity_factor = 1){
+get_boosted_tree_model <- function(pv_data_in, learning_rate=0.02, tree_depth=5, k_crossvalidation=5,complexity_factor = 1,s=0.15,epsilon=0.7){
 
   if("ID" %in% names(pv_data_in)) pv_data_in <- pv_data_in %>% dplyr::select(-ID)
-  pv_util <- transform_to_utils(pv_data_in)
-  pv.train <- xgboost::xgb.DMatrix(as.matrix(pv_util[,-dim(pv_util)[2]]),label=as.vector(pv_util$u), missing=NA)
+  pv_util <- transform_to_utils(pv_data_in,s,epsilon)
+  pv_train <- xgboost::xgb.DMatrix(as.matrix(pv_util[,-dim(pv_util)[2]]),label=as.vector(pv_util$u), missing=NA)
 
   #if(!train_on_utilities) #train on Likert scores
    # pv.train <- xgboost::xgb.DMatrix(as.matrix(pv_data1[,-dim(pv_data1)[2]]),label=as.vector(pv_data1$qsp22_7-1), missing=NA)
@@ -107,8 +114,8 @@ get_boosted_tree_model <- function(pv_data_in, learning_rate=0.02, tree_depth=5,
                     #objective="multi:softprob",
                     #eval_metric = "mlogloss"
   )
-  n_opt <- find_optimum_rounds_from_crossvalidation(pv_data,learning_rate,tree_depth,k_crossvalidation)
-  bst <- xgboost::xgboost(data=pv.train,params=paramlist,pv.train,nrounds=complexity_factor*n_opt)
+  n_opt <- find_optimum_rounds_from_crossvalidation(pv_data_in,learning_rate,tree_depth,k_crossvalidation,s,epsilon)
+  bst <- xgboost::xgboost(data=pv_train,params=paramlist,pv_train,nrounds=complexity_factor*n_opt)
   return(bst)
 }
 
@@ -124,21 +131,24 @@ get_boosted_tree_model <- function(pv_data_in, learning_rate=0.02, tree_depth=5,
 #'
 #' @param pv_data_in input survey data (training). Use pv_data for full survey data or pv_data_oo for owner-occupiers
 #' @param bst boosted tree model from xgboost
+#' @param s survey utility uncertainty
+#' @param epsilon hypothetical bias (1=unbiased, default 0.7)
 #'
 #' @return shap scores for all agents and features, in long format and including BIAS (same for all agents)
 #' @export
 #'
 #' @examples
-get_shap_scores <- function(pv_data_in,bst){
+get_shap_scores <- function(pv_data_in,bst,s,epsilon){
 
   if("ID" %in% names(pv_data_in)) pv_data_in <- pv_data_in %>% dplyr::select(-ID)
-  pv_util <- transform_to_utils(pv_data_in)
+  pv_util <- transform_to_utils(pv_data_in,s,epsilon)
+  #if("qsp22_7" %in% names(pv_data_in)) pv_util <- pv_data_in %>% dplyr::select(-"qsp22_7")
   pv_util_long <- pv_util
   pv_util_long$ID <- 1:dim(pv_util)[1]
   pv_util_long <- pv_util_long %>% tidyr::pivot_longer(-ID,names_to="code",values_to="answercode")
-  pv_util_long <- pv_util_long %>% dplyr::inner_join(pv_qanda,by=c("code","answercode"))
+  pv_util_long <- pv_util_long %>% dplyr::left_join(pv_qanda,by=c("code","answercode"))
 
-  shap_scores <- predict(bst, as.matrix(pv_util[,-dim(pv_util)[2]]), predcontrib = TRUE, approxcontrib = F) %>% tibble::as_tibble()
+  shap_scores <- predict(bst, as.matrix(pv_data_in[,-dim(pv_data_in)[2]]), predcontrib = TRUE, approxcontrib = F) %>% tibble::as_tibble()
   shap_scores$ID <- 1:dim(shap_scores)[1]
   shap_scores_long <- tidyr::pivot_longer(shap_scores,-ID,values_to="shap","names_to"="code")
   #add predictions
@@ -168,12 +178,14 @@ get_shap_scores <- function(pv_data_in,bst){
 #' partial utilities corresponding to each survey response and individual weights for each agent.
 #'
 #' @param shap_scores_long individual shap scores by feature (output from get_shap_scores)
+#' @param stat statistic - median (default) or mean
+#'
 #'
 #' @return data frame giving partial utilities for abstracted model features and residual (theta) terms and individual weights
 #' @export
 #'
 #' @examples
-get_abm_calibration <- function(shap_scores_long){
+get_abm_calibration <- function(shap_scores_long, stat="median"){
 
   shap_scores_long <- shap_scores_long %>% dplyr::select(-question,-answer)
   u_theta <- shap_scores_long %>% dplyr::filter(!(code %in% c("q9_1","qsp21"))) %>% dplyr::group_by(ID) %>% dplyr::summarise(shap=sum(shap))
@@ -183,9 +195,12 @@ get_abm_calibration <- function(shap_scores_long){
   shap_scores_abm <- shap_scores_long %>% dplyr::filter(code %in% c("q9_1","qsp21")) %>% dplyr::select(-u_predicted,-u_actual)
   shap_scores_abm <- shap_scores_abm %>% dplyr::bind_rows(u_theta) %>% dplyr::arrange(ID)
   shap_scores_abm <- shap_scores_abm %>% dplyr::rename("du"=shap)
-  shap_scores_mean <- shap_scores_abm %>% dplyr::group_by(code,answercode) %>% dplyr::summarise(du_mean=mean(du))
+  if(stat=="mean") {shap_scores_mean <- shap_scores_abm %>% dplyr::group_by(code,answercode) %>% dplyr::summarise(du_average=mean(du))
   shap_scores_abm <- shap_scores_abm %>% dplyr::inner_join(shap_scores_mean)
-  shap_scores_abm <- shap_scores_abm %>% dplyr::mutate(weight=du/du_mean)
+  shap_scores_abm <- shap_scores_abm %>% dplyr::mutate(weight=du/du_average)}
+  if(stat=="median") {shap_scores_median <- shap_scores_abm %>% dplyr::group_by(code,answercode) %>% dplyr::summarise(du_average=median(du))
+  shap_scores_abm <- shap_scores_abm %>% dplyr::inner_join(shap_scores_median)
+  shap_scores_abm <- shap_scores_abm %>% dplyr::mutate(weight=du/du_average)}
   return(shap_scores_abm)
 }
 
@@ -201,15 +216,17 @@ get_abm_calibration <- function(shap_scores_long){
 #' The agent weights for financial, social and barrier terms
 #'
 #' @param shap_scores_long shaps scores (partial utilities)
+#' @param stat median (default) or mean
 #'
 #' @return a dataframe with colums ID w_q9_1  w_qsp21 W_theta
 #' @export
 #'
 #' @examples
-get_model_weights <- function(shap_scores_long){
+get_model_weights <- function(shap_scores_long, stat="median"){
 
-  shap_scores_abm <- get_abm_calibration(shap_scores_long)
-  weights_abm <- shap_scores_abm %>% tidyr::pivot_wider(c(-du,-answercode,-du_mean),values_from=weight,names_from=code)
+  shap_scores_abm <- get_abm_calibration(shap_scores_long,stat)
+  weights_abm <- shap_scores_abm %>% tidyr::pivot_wider(c(-du,-answercode,-du_average),values_from=weight,names_from=code)
+  names(weights_abm)[2:4] <- paste("w_",names(weights_abm)[2:4],sep="")
   return(weights_abm)
 }
 
@@ -218,17 +235,20 @@ get_model_weights <- function(shap_scores_long){
 #' partial (dis) utilities for pv adoption derived from survey
 #'
 #'
-#' @param shap_scores_long shap scores (parial utilities)
+#' @param shap_scores_long shap scores (partial utilities)
+#' @param stat median (default) or mean
 #'
 #' @return dataframe
 #' @export
 #'
 #' @examples
-get_empirical_partial_utilities <- function(shap_scores_long){
+get_empirical_partial_utilities <- function(shap_scores_long,stat="median"){
 
-  shap_scores_abm <- get_abm_calibration(shap_scores_long)
-  partial_utils <- shap_scores_abm %>% dplyr::group_by(code,answercode) %>% dplyr::summarise(du_mean=mean(du))
+  shap_scores_abm <- get_abm_calibration(shap_scores_long,stat)
+  if(stat=="mean") partial_utils <- shap_scores_abm %>% dplyr::group_by(code,answercode) %>% dplyr::summarise(du_average=mean(du))
+  if(stat=="median") partial_utils <- shap_scores_abm %>% dplyr::group_by(code,answercode) %>% dplyr::summarise(du_average=median(du))
   return(partial_utils)
+
 }
 
 
@@ -340,4 +360,6 @@ map_likertscores_to_utilities <- function(s=0.15,epsilon=0.75){
 
 
 #shap_scores_long <- getSHAPscores(bst)
+
+
 
